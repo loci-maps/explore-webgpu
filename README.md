@@ -1,1 +1,1 @@
-# visual-to-web
+# loci-visualize

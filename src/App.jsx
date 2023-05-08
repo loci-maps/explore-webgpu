@@ -21,12 +21,13 @@ function App() {
 
     let loadedModel;
     const glftLoader = new GLTFLoader();
-    glftLoader.load('./assets/balls.gltf', (gltfScene) => {
+    glftLoader.load('./assets/test.gltf', (gltfScene) => {
       loadedModel = gltfScene;
       // console.log(loadedModel);
       //gltfScene.scene.rotation.y = Math.PI / 8;
-      //gltfScene.scene.position.y = 10;
-      gltfScene.scene.scale.set(.5, .5, .5);
+      gltfScene.scene.position.x= 1;
+      gltfScene.scene.position.y = 1;
+      gltfScene.scene.scale.set(1, 1, 1);
       test.scene.add(gltfScene.scene);
     });
 

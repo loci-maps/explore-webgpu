@@ -41,8 +41,10 @@ export default class SceneInit {
       canvas,
       // NOTE: Anti-aliasing smooths out the edges.
       antialias: true,
+      alpha: true,
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setClearColor( 0xA9A9A9);
     // this.renderer.shadowMap.enabled = true;
     document.body.appendChild(this.renderer.domElement);
 

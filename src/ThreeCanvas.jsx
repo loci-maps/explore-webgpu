@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import SceneInit from './lib/SceneInit';
 import { Water } from 'three/examples/jsm/objects/Water.js';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
+import { parse } from 'papaparse';
 
 function ThreeCanvas() {
   const canvasRef = useRef(null);
@@ -13,9 +14,30 @@ function ThreeCanvas() {
     const test = new SceneInit('myThreeJsCanvas');
     test.initialize();
     test.animate();
-  
+    
+    // Define a dictionary to store label data
+    // const labelData = {};
+
+    // // Read and parse the CSV file
+    // const readCSV = async () => {
+    //   const response = await fetch('./assets/pca_island_labels_coord.csv');
+    //   const csv = await response.text();
+
+    //   // Parse the CSV data
+    //   const parsedCSV = parse(csv, { header: true });
+    //   const { data } = parsedCSV;
+
+    //   // Store label data in the dictionary
+    //   data.forEach((row) => {
+    //     const { x, y, z, label } = row;
+    //     const position = `${x},${y},${z}`;
+    //     labelData[position] = label;
+    //   });
+    // };
+
+    // readCSV();
+
     const canvas = canvasRef.current;
-  
     // Add renderer
     const renderer = new THREE.WebGLRenderer();
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -74,9 +96,16 @@ function ThreeCanvas() {
     const gltfLoader = new GLTFLoader();
     gltfLoader.load('./assets/pca5_island.gltf', (gltfScene) => {
       loadedModel = gltfScene;
+      loadedModel.scene.traverse((child) => {
+        if (child.isMesh) {
+          const { geometry } = child;
+          const { position } = geometry.attributes;
+          console.log(position)
+        }
+      })
       const box = new THREE.Box3().setFromObject(loadedModel.scene);
       const center = box.getCenter(new THREE.Vector3());
-  
+
       loadedModel.scene.position.x += loadedModel.scene.position.x - center.x;
       loadedModel.scene.position.y += loadedModel.scene.position.y - center.y;
       loadedModel.scene.position.z += loadedModel.scene.position.z - center.z;
@@ -86,7 +115,7 @@ function ThreeCanvas() {
       test.scene.add(water);
       test.scene.add(loadedModel.scene);
     });
-  
+    console.log(test)
     const animate = () => {
       controls.update();
       water.material.uniforms['time'].value += .05 / 60.0;

@@ -7,7 +7,7 @@ function App() {
   const [meshValue, setMeshValue] = useState('pca5_island.gltf');
   return (
     <div className="flex-row">
-      {/* <Sidebar meshValue={meshValue} setMeshValue={setMeshValue}/> */}
+      <Sidebar meshValue={meshValue} setMeshValue={setMeshValue}/>
       <ThreeCanvas className="w-1/2" asset={meshValue}/>
     </div>
   );

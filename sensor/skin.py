@@ -1,4 +1,7 @@
-import serial
+import time, serial
+from flask import Flask, jsonify
+
+app = Flask(__name__)
 
 PORT = serial.Serial('/dev/cu.usbserial-A7045P1K', baudrate=57600)
 
@@ -57,13 +60,24 @@ def parseData(dataIn):
     
     except ValueError as ve:
         raise Exception(f"Bad number format:\n{ve}")
-    
-    
-i = 0
-while i < 1000:
-    data = PORT.readline()
-    print(data)
-    batteryLevel, voltageBias, voltageOutput, conductanceMicroS = parseData(data)
-    print("batteryLevel: {a}, voltageBias: {b}, voltageOutput: {c}, conductanceMicroS: {d}".format(a=batteryLevel, b=voltageBias, c=voltageOutput, d=conductanceMicroS))
 
-PORT.close()
+@app.route('/parse-data', methods=['GET'])
+def parse_data():
+    response = []
+    try:
+        print("Starting data gathering")
+        start_time = time.time()
+        while time.time() - start_time < 30:
+            data = PORT.readline()
+            batteryLevel, voltageBias, voltageOutput, conductanceMicroS = parseData(data)
+            response.append([time.time(), batteryLevel, voltageBias, voltageOutput, conductanceMicroS])
+        PORT.close()
+        print("Finished gathering data")
+        print(response)
+        return jsonify(response), 200
+
+    except Exception as e:
+        return str(e), 500
+
+if __name__ == '__main__':
+    app.run()

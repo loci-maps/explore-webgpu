@@ -40,23 +40,42 @@ const useStyles = makeStyles((theme) => ({
   button: {
     marginBottom: theme.spacing(2),
   },
+  smallerButton: {
+    marginBottom: theme.spacing(2),
+    width: '60%', // Adjust the width to your desired value
+  },
 }));
 
 const Sidebar = ({ meshValue, setMeshValue }) => {
   const classes = useStyles();
+  const [apiResponse, setApiResponse] = useState('');
   const [open, setOpen] = useState(false);
   const [selectValue, setSelectValue] = useState('');
-  const assetFiles = ['pca5_island.obj', 'pca5_island.gltf', 'tsne2_island.gltf', 'umap2_island.gltf', 'umap5_island.gltf']; // Replace with actual file names from the 'assets' directory
+  const assetFiles = ['pca5_island.obj', 'pca5_island.gltf', 'tsne2_island.gltf', 'umap2_island.gltf', 'umap5_island.gltf'];
+  const [tasksOpen, setTasksOpen] = useState(false);
 
   const handleConfigureClick = () => {
     setOpen(!open);
   };
 
   const handleApplyClick = () => {
-    // Perform action when Apply button is clicked
-    setMeshValue(selectValue)
-    console.log(meshValue);
-    // Add your logic here
+    setMeshValue(selectValue);
+  };
+
+  const handleStartGatheringData = () => {
+    fetch('http://127.0.0.1:5000/parse-data')
+    .then(response => response.json())
+    .then(data => {
+      // Process the API response
+      setApiResponse(data.message);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+  };
+
+  const handleTasksClick = () => {
+    setTasksOpen(!tasksOpen);
   };
 
   return (
@@ -88,10 +107,7 @@ const Sidebar = ({ meshValue, setMeshValue }) => {
                   onChange={(event) => setSelectValue(event.target.value)}
                 >
                   {assetFiles.map((asset, index) => (
-                    <MenuItem
-                      key={index}
-                      value={asset}
-                    >
+                    <MenuItem key={index} value={asset}>
                       {asset}
                     </MenuItem>
                   ))}
@@ -110,24 +126,37 @@ const Sidebar = ({ meshValue, setMeshValue }) => {
             </ListItem>
           </List>
         </Collapse>
-        <ListItem button>
+        <ListItem button onClick={handleTasksClick}>
           <ListItemText primary="Tasks" />
+          {tasksOpen ? <ExpandLess /> : <ExpandMore />}
         </ListItem>
-        <List component="div" disablePadding>
-          <ListItem button className={classes.nested}>
-            <Checkbox checked={false} />
-            <ListItemText primary="Task 1" />
-          </ListItem>
-          <ListItem button className={classes.nested}>
-            <Checkbox checked={false} />
-            <ListItemText primary="Task 2" />
-          </ListItem>
-          <ListItem button className={classes.nested}>
-            <Checkbox checked={false} />
-            <ListItemText primary="Task 3" />
-          </ListItem>
-        </List>
+        <Collapse in={tasksOpen} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            <ListItem button className={classes.nested}>
+              <Checkbox checked={false} />
+              <ListItemText primary="Task 1" />
+            </ListItem>
+            <ListItem button className={classes.nested}>
+              <Checkbox checked={false} />
+              <ListItemText primary="Task 2" />
+            </ListItem>
+            <ListItem button className={classes.nested}>
+              <Checkbox checked={false} />
+              <ListItemText primary="Task 3" />
+            </ListItem>
+          </List>
+        </Collapse>
       </List>
+      <div className={classes.toolbar}>
+        <Button
+          variant="contained"
+          color="primary"
+          className={classes.smallerButton}
+          onClick={handleStartGatheringData}
+        >
+          Start
+        </Button>
+      </div>
     </Drawer>
   );
 };

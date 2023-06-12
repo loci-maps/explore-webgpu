@@ -101,16 +101,14 @@ function ThreeCanvas({ asset }) {
 
           var count = 0
           // Access the parsed data
-          parsedData.data.map(val => {
-            if (count != 100000000000) {
+          parsedData.data.map((val, idx) => {
+            if ((idx + 1) % 100 === 0) {
               const label = new CSS2DObject(document.createElement('div'));
               var pos = new THREE.Vector3( center.x - val['X'], center.y - val['Y'], center.z - val['Z'])
               label.position.copy(pos);
               label.element.textContent = val['FaceLabels'];
               loadedModel.scene.children[0].attach(label)
-              count++
             }
-
           })
         })
         .catch(error => console.error('Error:', error));

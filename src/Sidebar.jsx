@@ -48,7 +48,6 @@ const useStyles = makeStyles((theme) => ({
 
 const Sidebar = ({ meshValue, setMeshValue }) => {
   const classes = useStyles();
-  const [apiResponse, setApiResponse] = useState('');
   const [open, setOpen] = useState(false);
   const [selectValue, setSelectValue] = useState('');
   const assetFiles = ['pca5_island.obj', 'pca5_island.gltf', 'tsne2_island.gltf', 'umap2_island.gltf', 'umap5_island.gltf'];
@@ -64,11 +63,6 @@ const Sidebar = ({ meshValue, setMeshValue }) => {
 
   const handleStartGatheringData = () => {
     fetch('http://127.0.0.1:5000/parse-data')
-    .then(response => response.json())
-    .then(data => {
-      // Process the API response
-      setApiResponse(data.message);
-    })
     .catch(error => {
       console.error('Error:', error);
     });

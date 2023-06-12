@@ -1,8 +1,9 @@
-import time, serial
+import os, csv, time, serial
 from flask import Flask, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app, resources={r"/*": {"origins": "http://127.0.0.1:5000"}})
 PORT = serial.Serial('/dev/cu.usbserial-A7045P1K', baudrate=57600)
 
 def parseData(dataIn):
@@ -63,19 +64,36 @@ def parseData(dataIn):
 
 @app.route('/parse-data', methods=['GET'])
 def parse_data():
-    response = []
+    sensorData = []
     try:
         print("Starting data gathering")
         start_time = time.time()
-        while time.time() - start_time < 30:
+        while time.time() - start_time < 5:
             data = PORT.readline()
             batteryLevel, voltageBias, voltageOutput, conductanceMicroS = parseData(data)
-            response.append([time.time(), batteryLevel, voltageBias, voltageOutput, conductanceMicroS])
+            print("Time: {a}".format(a=time.time() - start_time))
+            print(batteryLevel, voltageBias, voltageOutput, conductanceMicroS)
+            sensorData.append([time.time(), batteryLevel, voltageBias, voltageOutput, conductanceMicroS])
         PORT.close()
         print("Finished gathering data")
-        print(response)
-        return jsonify(response), 200
 
+        # Write data to CSV file
+        csv_filename = 'data.csv'
+        csv_path = os.path.join('data', csv_filename)
+        with open(csv_path, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['Timestamp', 'Battery Level', 'Voltage Bias', 'Voltage Output', 'Conductance'])
+            writer.writerows(sensorData)
+
+        headers = {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
+                'Content-Disposition': 'attachment;filename=data.csv',
+                'Content-Type': 'text/csv'
+        }
+        return jsonify(csvfile, headers=headers)
+    
     except Exception as e:
         return str(e), 500
 

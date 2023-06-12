@@ -1,4 +1,4 @@
-import React from 'react';
+import { React, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import List from '@material-ui/core/List';
@@ -42,17 +42,21 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Sidebar = () => {
+const Sidebar = ({ meshValue, setMeshValue }) => {
   const classes = useStyles();
-  const [open, setOpen] = React.useState(false);
-  const [meshValue, setMeshValue] = React.useState('');
+  const [open, setOpen] = useState(false);
+  const [selectValue, setSelectValue] = useState('');
+  const assetFiles = ['pca5_island.obj', 'pca5_island.gltf', 'tsne2_island.gltf', 'umap2_island.gltf', 'umap5_island.gltf']; // Replace with actual file names from the 'assets' directory
 
   const handleConfigureClick = () => {
     setOpen(!open);
   };
 
-  const handleMeshChange = (event) => {
-    setMeshValue(event.target.value);
+  const handleApplyClick = () => {
+    // Perform action when Apply button is clicked
+    setMeshValue(selectValue)
+    console.log(meshValue);
+    // Add your logic here
   };
 
   return (
@@ -81,14 +85,16 @@ const Sidebar = () => {
                   labelId="mesh-select-label"
                   id="mesh-select"
                   value={meshValue}
-                  onChange={handleMeshChange}
+                  onChange={(event) => setSelectValue(event.target.value)}
                 >
-                  <MenuItem value="">
-                    <em>None</em>
-                  </MenuItem>
-                  <MenuItem value="Mesh 1">Mesh 1</MenuItem>
-                  <MenuItem value="Mesh 2">Mesh 2</MenuItem>
-                  <MenuItem value="Mesh 3">Mesh 3</MenuItem>
+                  {assetFiles.map((asset, index) => (
+                    <MenuItem
+                      key={index}
+                      value={asset}
+                    >
+                      {asset}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </ListItem>
@@ -97,6 +103,7 @@ const Sidebar = () => {
                 variant="contained"
                 color="primary"
                 className={classes.button}
+                onClick={handleApplyClick}
               >
                 Apply
               </Button>

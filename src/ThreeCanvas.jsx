@@ -1,13 +1,15 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import Papa from 'papaparse';
+import * as THREE from 'three';
+// import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import * as THREE from 'three';
+import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import SceneInit from './lib/SceneInit';
 import { Water } from 'three/examples/jsm/objects/Water.js';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
-import { parse } from 'papaparse';
 
-function ThreeCanvas() {
+function ThreeCanvas({ asset }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -15,35 +17,13 @@ function ThreeCanvas() {
     test.initialize();
     test.animate();
     
-    // Define a dictionary to store label data
-    // const labelData = {};
-
-    // // Read and parse the CSV file
-    // const readCSV = async () => {
-    //   const response = await fetch('./assets/pca_island_labels_coord.csv');
-    //   const csv = await response.text();
-
-    //   // Parse the CSV data
-    //   const parsedCSV = parse(csv, { header: true });
-    //   const { data } = parsedCSV;
-
-    //   // Store label data in the dictionary
-    //   data.forEach((row) => {
-    //     const { x, y, z, label } = row;
-    //     const position = `${x},${y},${z}`;
-    //     labelData[position] = label;
-    //   });
-    // };
-
-    // readCSV();
-
     const canvas = canvasRef.current;
     // Add renderer
     const renderer = new THREE.WebGLRenderer();
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     canvas.appendChild(renderer.domElement);
-  
+
     // Add sky
     const sky = new Sky();
     sky.scale.setScalar(450000);
@@ -52,26 +32,33 @@ function ThreeCanvas() {
     test.scene.add(sky);
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     const sun = new THREE.Vector3();
-  
+    
+    // Add CSS2DRenderer
+    const css2DRenderer = new CSS2DRenderer();
+    css2DRenderer.setSize(window.innerWidth, window.innerHeight);
+    css2DRenderer.domElement.style.position = 'absolute';
+    css2DRenderer.domElement.style.top = '0px';
+    document.body.appendChild(css2DRenderer.domElement);
+
     //Defining the x, y and z value for our 3D Vector
     const theta = Math.PI * (0.49 - 0.5);
     const phi = 2 * Math.PI * (0.205 - 0.5);
     sun.x = Math.cos(phi);
     sun.y = Math.sin(phi) * Math.sin(theta);
     sun.z = Math.sin(phi) * Math.cos(theta);
-  
+
     sky.material.uniforms['sunPosition'].value.copy(sun);
     test.scene.environment = pmremGenerator.fromScene(sky).texture;
-  
+    
     // Camera params
-    const controls = new OrbitControls(test.camera, canvas);
+    const controls = new OrbitControls(test.camera, css2DRenderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.maxDistance = 100;
     controls.minDistance = 10;
     controls.maxPolarAngle = Math.PI / 2;
     controls.minPolarAngle = 0;
-  
+
     // Add water
     const waterGeometry = new THREE.PlaneGeometry(10000, 10000);
     const water = new Water(
@@ -93,19 +80,11 @@ function ThreeCanvas() {
     water.rotation.x = -Math.PI / 2;
 
     let loadedModel;
-    const gltfLoader = new GLTFLoader();
-    gltfLoader.load('./assets/pca5_island.gltf', (gltfScene) => {
-      loadedModel = gltfScene;
-      loadedModel.scene.traverse((child) => {
-        if (child.isMesh) {
-          const { geometry } = child;
-          const { position } = geometry.attributes;
-          console.log(position)
-        }
-      })
+    const loader = new GLTFLoader();
+    loader.load('./assets/'.concat(asset), (objScene) => {
+      loadedModel = objScene;
       const box = new THREE.Box3().setFromObject(loadedModel.scene);
       const center = box.getCenter(new THREE.Vector3());
-
       loadedModel.scene.position.x += loadedModel.scene.position.x - center.x;
       loadedModel.scene.position.y += loadedModel.scene.position.y - center.y;
       loadedModel.scene.position.z += loadedModel.scene.position.z - center.z;
@@ -113,23 +92,50 @@ function ThreeCanvas() {
 
       water.position.y = center.y - 1.4;
       test.scene.add(water);
-      test.scene.add(loadedModel.scene);
+      
+      fetch('./assets/pca_island_labels_coord.csv')
+        .then(response => response.text())
+        .then(csvData => {
+          // Use Papa Parse to parse the CSV data
+          const parsedData = Papa.parse(csvData, { header: true });
+
+          var count = 0
+          // Access the parsed data
+          parsedData.data.map(val => {
+            if (count != 100000000000) {
+              const label = new CSS2DObject(document.createElement('div'));
+              var pos = new THREE.Vector3( center.x - val['X'], center.y - val['Y'], center.z - val['Z'])
+              label.position.copy(pos);
+              label.element.textContent = val['FaceLabels'];
+              loadedModel.scene.children[0].attach(label)
+              count++
+            }
+
+          })
+        })
+        .catch(error => console.error('Error:', error));
+
+        test.scene.add(loadedModel.scene);
+
+      
     });
-    console.log(test)
+
     const animate = () => {
       controls.update();
       water.material.uniforms['time'].value += .05 / 60.0;
       renderer.render(test.scene, test.camera);
+      css2DRenderer.render(test.scene, test.camera)
       requestAnimationFrame(animate);
     };
-  
+
     animate();
-  }, []);
+    
+  }, [asset]);
   
 
   return (
-    <div className="w-1/2 h-1/2">
-      <canvas id="myThreeJsCanvas" className="h-1/2 w-1/2" ref={canvasRef} />
+    <div>
+      <canvas id="myThreeJsCanvas" ref={canvasRef} />
     </div>
   );
 }

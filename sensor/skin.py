@@ -68,7 +68,7 @@ def parse_data():
     try:
         print("Starting data gathering")
         start_time = time.time()
-        while time.time() - start_time < 5:
+        while time.time() - start_time < 150:
             data = PORT.readline()
             batteryLevel, voltageBias, voltageOutput, conductanceMicroS = parseData(data)
             print("Time: {a}".format(a=time.time() - start_time))

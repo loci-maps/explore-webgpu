@@ -72,6 +72,10 @@ const Sidebar = ({ meshValue, setMeshValue }) => {
     setTasksOpen(!tasksOpen);
   };
 
+  const handleSelectChange = (event) => {
+    setSelectValue(event.target.value);
+  };
+
   return (
     <Drawer
       className={classes.drawer}
@@ -97,8 +101,8 @@ const Sidebar = ({ meshValue, setMeshValue }) => {
                 <Select
                   labelId="mesh-select-label"
                   id="mesh-select"
-                  value={meshValue}
-                  onChange={(event) => setSelectValue(event.target.value)}
+                  value={selectValue}
+                  onChange={handleSelectChange}
                 >
                   {assetFiles.map((asset, index) => (
                     <MenuItem key={index} value={asset}>
@@ -128,15 +132,15 @@ const Sidebar = ({ meshValue, setMeshValue }) => {
           <List component="div" disablePadding>
             <ListItem button className={classes.nested}>
               <Checkbox checked={false} />
-              <ListItemText primary="Task 1" />
+              <ListItemText primary="French Literature" />
             </ListItem>
             <ListItem button className={classes.nested}>
               <Checkbox checked={false} />
-              <ListItemText primary="Task 2" />
+              <ListItemText primary="Mathematics" />
             </ListItem>
             <ListItem button className={classes.nested}>
               <Checkbox checked={false} />
-              <ListItemText primary="Task 3" />
+              <ListItemText primary="Computer Science" />
             </ListItem>
           </List>
         </Collapse>
